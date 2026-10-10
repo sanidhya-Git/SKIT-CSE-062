@@ -1,10 +1,10 @@
-node_modules
+node_modules/
 package-lock.json
 .forceignore
-.gitignore
 
 # secrets & local env
 .env
+.env.local
 *.env
 
 # build & test artifacts
@@ -12,6 +12,11 @@ ai-engine/coverage/
 ai-engine/logs/
 coverage/
 logs/
+
+# Next.js
+frontend/.next/
+frontend/out/
+frontend/tsconfig.tsbuildinfo
 
 # scripts (not for repo)
 run_sanidhya.ps1
