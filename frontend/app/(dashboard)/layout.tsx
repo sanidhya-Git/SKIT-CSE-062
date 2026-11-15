@@ -1,24 +1,52 @@
-import Titlebar from '@/components/Titlebar'
-import Sidebar from '@/components/Sidebar'
-import Topbar from '@/components/Topbar'
-import ChatWidget from '@/components/ChatWidget'
-import LeadScorerModal from '@/components/LeadScorerModal'
+'use client';
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Sidebar } from '@/components/layout/Sidebar';
+import { Topbar } from '@/components/layout/Topbar';
+import { useAuth } from '@/context/AuthContext';
+import { PageSpinner } from '@/components/ui/Spinner';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="window">
-      <Titlebar />
-      <div className="app-body">
-        <Sidebar />
-        <div className="main">
-          <Topbar />
-          <div className="content">
-            {children}
-          </div>
-        </div>
+  const { token, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !token) {
+      router.replace('/login');
+    }
+  }, [token, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: 'var(--ground)',
+        }}
+      >
+        <PageSpinner message="Authenticating…" />
       </div>
-      <ChatWidget />
-      <LeadScorerModal />
+    );
+  }
+
+  if (!token) {
+    // Will redirect — render nothing while that happens
+    return null;
+  }
+
+  return (
+    <div className="dashboard-shell">
+      <Sidebar />
+      <div className="dashboard-main">
+        <Topbar />
+        <main className="dashboard-content">
+          {children}
+        </main>
+      </div>
     </div>
-  )
+  );
 }
