@@ -1,7 +1,10 @@
 'use strict';
 
-// dotenv loads .env when present; on Vercel all vars come from the dashboard.
-require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+// Load .env.production first (Vercel / production), then .env (local dev).
+// dotenv never overrides vars already set in the process environment.
+const _path = require('path');
+require('dotenv').config({ path: _path.join(__dirname, '.env.production') });
+require('dotenv').config({ path: _path.join(__dirname, '.env') });
 
 const { app } = require('./src/server');
 
