@@ -16,6 +16,7 @@ import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
 import LogoutIcon from '@mui/icons-material/Logout';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const PAGE_TITLES: Record<string, string> = {
   '/overview':     'Overview',
@@ -36,7 +37,11 @@ function getPageTitle(pathname: string): string {
   return 'OneOps';
 }
 
-export function Topbar() {
+interface TopbarProps {
+  onMenuToggle?: () => void;
+}
+
+export function Topbar({ onMenuToggle }: TopbarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout } = useAuth();
@@ -53,7 +58,17 @@ export function Topbar() {
 
   return (
     <header className="topbar" role="banner">
-      <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+        <div className="topbar-hamburger">
+          <IconButton
+            size="small"
+            onClick={onMenuToggle}
+            aria-label="Toggle navigation"
+            sx={{ width: 34, height: 34, borderRadius: '6px' }}
+          >
+            <MenuIcon fontSize="small" />
+          </IconButton>
+        </div>
         <span className="topbar-title">{title}</span>
       </div>
 

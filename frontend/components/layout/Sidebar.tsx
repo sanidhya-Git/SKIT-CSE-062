@@ -24,6 +24,11 @@ interface NavItem {
   exact?: boolean;
 }
 
+interface SidebarProps {
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
+}
+
 const NAV_ITEMS: NavItem[] = [
   { href: '/overview',     label: 'Overview',      icon: <DashboardOutlinedIcon sx={{ fontSize: '1.125rem' }} />, exact: true },
   { href: '/workflows',    label: 'Workflows',     icon: <AccountTreeOutlinedIcon sx={{ fontSize: '1.125rem' }} /> },
@@ -39,7 +44,7 @@ const SECONDARY_NAV: NavItem[] = [
   { href: '/admin',     label: 'Audit Log', icon: <ArticleOutlinedIcon sx={{ fontSize: '1.125rem' }} /> },
 ];
 
-export function Sidebar() {
+export function Sidebar({ mobileOpen = false, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
   const { org, orgs, switchOrg } = useCurrentOrg();
   const [showOrgMenu, setShowOrgMenu] = useState(false);
@@ -50,7 +55,7 @@ export function Sidebar() {
   };
 
   return (
-    <nav className="sidebar" aria-label="Main navigation">
+    <nav className={`sidebar${mobileOpen ? ' mobile-open' : ''}`} aria-label="Main navigation">
       {/* Logo */}
       <Link href="/overview" className="sidebar-logo" style={{ textDecoration: 'none' }}>
         <div className="sidebar-logo-mark">O</div>
