@@ -3,8 +3,7 @@
 const required = (name) => {
   const val = process.env[name];
   if (!val) {
-    console.error(`[config] Missing required environment variable: ${name}`);
-    process.exit(1);
+    throw new Error(`Missing required environment variable: ${name}`);
   }
   return val;
 };
