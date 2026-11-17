@@ -14,7 +14,7 @@ import Grid from '@mui/material/Grid';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const { setSession } = useAuth();
   const { showToast } = useToast();
 
   const [form, setForm] = useState({
@@ -37,6 +37,8 @@ export default function RegisterPage() {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = 'Enter a valid email.';
     if (!form.password) errs.password = 'Password is required.';
     else if (form.password.length < 8) errs.password = 'Password must be at least 8 characters.';
+    else if (!/[A-Z]/.test(form.password)) errs.password = 'Password must contain at least one uppercase letter.';
+    else if (!/[0-9]/.test(form.password)) errs.password = 'Password must contain at least one number.';
     if (form.password !== form.confirmPassword) errs.confirmPassword = 'Passwords do not match.';
     if (!form.organisationName.trim()) errs.organisationName = 'Organisation name is required.';
     setErrors(errs);
@@ -49,13 +51,13 @@ export default function RegisterPage() {
 
     setLoading(true);
     try {
-      await authApi.register({
+      const res = await authApi.register({
         name: form.name.trim(),
         email: form.email,
         password: form.password,
         organisationName: form.organisationName.trim(),
       });
-      await login(form.email, form.password);
+      setSession(res.token, res.user);
       showToast('success', 'Account created', 'Welcome to OneOps AI.');
       router.push('/overview');
     } catch (err) {
@@ -128,10 +130,10 @@ export default function RegisterPage() {
               value={form.password}
               onChange={e => setField('password', e.target.value)}
               error={!!errors.password}
-              helperText={errors.password}
+              helperText={errors.password || 'Min 8 chars, one uppercase, one number'}
               fullWidth
               required
-              placeholder="8+ characters"
+              placeholder="Min 8 chars"
             />
           </Grid>
           <Grid size={{ xs: 12, sm: 6 }}>

@@ -11,6 +11,7 @@ const {
 const { ConflictError, UnauthorizedError } = require('../utils/errors');
 const UserRepository = require('../repositories/UserRepository');
 const SessionRepository = require('../repositories/SessionRepository');
+const OrganisationRepository = require('../repositories/OrganisationRepository');
 const config = require('../config');
 const logger = require('../utils/logger');
 
@@ -18,7 +19,7 @@ class AuthService {
   /**
    * Register a new user. Returns { user, accessToken, refreshToken }
    */
-  async register({ name, email, password }, { ip, userAgent } = {}) {
+  async register({ name, email, password, organisationName }, { ip, userAgent } = {}) {
     const exists = await UserRepository.existsByEmail(email);
     if (exists) {
       throw new ConflictError('An account with this email already exists');
@@ -29,12 +30,24 @@ class AuthService {
 
     const user = await UserRepository.create({ id: userId, email, passwordHash, name });
 
-    const { accessToken, refreshToken, session } = await this._createSession(user, { ip, userAgent });
+    // Create the organisation and add user as owner
+    const orgId = uuidv4();
+    const slug = organisationName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60);
+    // Append short id suffix to avoid slug collisions
+    const uniqueSlug = `${slug}-${orgId.slice(0, 8)}`;
+    const org = await OrganisationRepository.create({ id: orgId, name: organisationName, slug: uniqueSlug, ownerId: userId });
 
-    logger.info({ userId: user.id, action: 'register' }, 'User registered');
+    const { accessToken, refreshToken } = await this._createSession(user, { ip, userAgent });
+
+    logger.info({ userId: user.id, orgId: org.id, action: 'register' }, 'User registered');
 
     return {
       user: { id: user.id, email: user.email, name: user.name },
+      organisation: { id: org.id, name: org.name, slug: org.slug },
       accessToken,
       refreshToken,
     };

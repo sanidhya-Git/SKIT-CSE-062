@@ -10,6 +10,7 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   login: (email: string, password: string) => Promise<void>;
+  setSession: (token: string, user: User) => void;
   logout: () => Promise<void>;
   refreshToken: () => Promise<string | null>;
 }
@@ -82,6 +83,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [scheduleRefresh]
   );
 
+  const setSession = useCallback((newToken: string, newUser: User) => {
+    setToken(newToken);
+    setUser(newUser);
+    scheduleRefresh(newToken);
+  }, [scheduleRefresh]);
+
   const logout = useCallback(async () => {
     if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     await authApi.logout().catch(() => {});
@@ -104,7 +111,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [scheduleRefresh]);
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, refreshToken }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, setSession, logout, refreshToken }}>
       {children}
     </AuthContext.Provider>
   );
