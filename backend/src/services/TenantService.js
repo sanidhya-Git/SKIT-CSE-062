@@ -1,10 +1,13 @@
 'use strict';
 
 const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const OrganisationRepository = require('../repositories/OrganisationRepository');
 const UserRepository = require('../repositories/UserRepository');
 const { NotFoundError, ConflictError, ForbiddenError } = require('../utils/errors');
 const logger = require('../utils/logger');
+const config = require('../config');
+const EmailService = require('./EmailService');
 
 function slugify(name) {
   return name
@@ -57,25 +60,74 @@ class TenantService {
   }
 
   async inviteMember(orgId, { email, role }, invitedBy) {
-    const user = await UserRepository.findByEmail(email);
-    if (!user) {
-      throw new NotFoundError(`No user found with email ${email}. They must register first.`);
+    const [org, inviter, user] = await Promise.all([
+      OrganisationRepository.findById(orgId),
+      UserRepository.findById(invitedBy),
+      UserRepository.findByEmail(email),
+    ]);
+
+    if (!org) throw new NotFoundError('Organisation');
+
+    // User already has an account — add them directly and notify
+    if (user) {
+      const existing = await OrganisationRepository.getMember(orgId, user.id);
+      if (existing) {
+        throw new ConflictError('User is already a member of this organisation');
+      }
+
+      const member = await OrganisationRepository.addMember({
+        orgId,
+        userId: user.id,
+        role,
+        invitedBy,
+      });
+
+      logger.info({ orgId, userId: user.id, role, invitedBy, action: 'member.invite' }, 'Member added');
+
+      // Send notification email (non-blocking)
+      EmailService.sendMemberAddedEmail({
+        toEmail: user.email,
+        orgName: org.name,
+        inviterName: inviter?.name || 'A team member',
+        role,
+      }).catch((err) =>
+        logger.warn({ err, toEmail: user.email }, 'Failed to send member-added email')
+      );
+
+      return { ...member, inviteType: 'direct' };
     }
 
-    const existing = await OrganisationRepository.getMember(orgId, user.id);
-    if (existing) {
-      throw new ConflictError('User is already a member of this organisation');
+    // User doesn't have an account — create a pending invite and email them
+    const existingInvite = await OrganisationRepository.findPendingInviteByEmail(orgId, email);
+    if (existingInvite) {
+      throw new ConflictError('An active invite has already been sent to this email address');
     }
 
-    const member = await OrganisationRepository.addMember({
+    const token = crypto.randomBytes(32).toString('hex');
+    const invite = await OrganisationRepository.createInvite({
       orgId,
-      userId: user.id,
+      email,
       role,
+      token,
       invitedBy,
     });
 
-    logger.info({ orgId, userId: user.id, role, invitedBy, action: 'member.invite' }, 'Member invited');
-    return member;
+    logger.info({ orgId, email, role, invitedBy, action: 'member.invite_pending' }, 'Invite created');
+
+    const inviteLink = `${config.frontendUrl}/accept-invite?token=${token}`;
+
+    // Send invite email (non-blocking)
+    EmailService.sendInviteEmail({
+      toEmail: email,
+      orgName: org.name,
+      inviterName: inviter?.name || 'A team member',
+      inviteLink,
+      role,
+    }).catch((err) =>
+      logger.warn({ err, toEmail: email }, 'Failed to send invite email')
+    );
+
+    return { ...invite, inviteType: 'pending' };
   }
 
   async updateMemberRole(orgId, targetUserId, role, requestingMember) {

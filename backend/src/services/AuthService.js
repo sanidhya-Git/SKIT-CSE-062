@@ -125,6 +125,63 @@ class AuthService {
     }
   }
 
+  /**
+   * Accept a pending invite: create account (or add existing user) and join the org.
+   * Returns { user, organisation, accessToken, refreshToken }
+   */
+  async acceptInvite({ token, name, password }, { ip, userAgent } = {}) {
+    const { NotFoundError, ConflictError } = require('../utils/errors');
+
+    const invite = await OrganisationRepository.findInviteByToken(token);
+    if (!invite) {
+      throw new NotFoundError('Invite not found or has expired');
+    }
+
+    let user = await UserRepository.findByEmail(invite.email);
+
+    if (!user) {
+      const exists = await UserRepository.existsByEmail(invite.email);
+      if (exists) {
+        throw new ConflictError('An account with this email already exists');
+      }
+
+      const passwordHash = await hashPassword(password);
+      const userId = uuidv4();
+      user = await UserRepository.create({
+        id: userId,
+        email: invite.email,
+        passwordHash,
+        name,
+      });
+    }
+
+    const alreadyMember = await OrganisationRepository.getMember(invite.org_id, user.id);
+    if (!alreadyMember) {
+      await OrganisationRepository.addMember({
+        orgId: invite.org_id,
+        userId: user.id,
+        role: invite.role,
+        invitedBy: invite.invited_by,
+      });
+    }
+
+    await OrganisationRepository.markInviteAccepted(token);
+
+    const { accessToken, refreshToken } = await this._createSession(user, { ip, userAgent });
+
+    logger.info(
+      { userId: user.id, orgId: invite.org_id, action: 'accept_invite' },
+      'Invite accepted'
+    );
+
+    return {
+      user: { id: user.id, email: user.email, name: user.name },
+      organisation: { id: invite.org_id, name: invite.org_name },
+      accessToken,
+      refreshToken,
+    };
+  }
+
   async _createSession(user, { ip, userAgent } = {}) {
     const rawRefreshToken = generateRefreshToken();
     const refreshTokenHash = hashToken(rawRefreshToken);

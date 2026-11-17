@@ -2,7 +2,7 @@
 
 const { Router } = require('express');
 const AuthService = require('../services/AuthService');
-const { registerSchema, loginSchema, refreshSchema, logoutSchema } = require('../validators/auth');
+const { registerSchema, loginSchema, refreshSchema, logoutSchema, acceptInviteSchema } = require('../validators/auth');
 const { authLimiter } = require('../middleware/rateLimit');
 
 const router = Router();
@@ -53,6 +53,19 @@ router.delete('/logout', async (req, res, next) => {
     const { refreshToken } = logoutSchema.parse(req.body);
     await AuthService.logout(refreshToken);
     res.json({ success: true });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/accept-invite', async (req, res, next) => {
+  try {
+    const data = acceptInviteSchema.parse(req.body);
+    const result = await AuthService.acceptInvite(data, {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+    });
+    res.status(201).json(result);
   } catch (err) {
     next(err);
   }

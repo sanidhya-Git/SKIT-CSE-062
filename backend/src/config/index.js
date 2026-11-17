@@ -65,6 +65,15 @@ const config = {
     concurrency: parseInt(optional('BULLMQ_CONCURRENCY', '5'), 10),
   },
 
+  smtp: {
+    host: optional('SMTP_HOST'),
+    port: parseInt(optional('SMTP_PORT', '587'), 10),
+    secure: optional('SMTP_SECURE', 'false') === 'true',
+    user: optional('SMTP_USER'),
+    pass: optional('SMTP_PASS'),
+    from: optional('SMTP_FROM'),
+  },
+
   isDev: optional('NODE_ENV', 'development') === 'development',
   isTest: optional('NODE_ENV', 'development') === 'test',
   isProd: optional('NODE_ENV', 'development') === 'production',

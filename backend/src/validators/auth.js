@@ -27,4 +27,15 @@ const logoutSchema = z.object({
   refreshToken: z.string().min(1),
 });
 
-module.exports = { registerSchema, loginSchema, refreshSchema, logoutSchema };
+const acceptInviteSchema = z.object({
+  token: z.string().min(1),
+  name: z.string().min(1).max(255).trim(),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(128)
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+});
+
+module.exports = { registerSchema, loginSchema, refreshSchema, logoutSchema, acceptInviteSchema };

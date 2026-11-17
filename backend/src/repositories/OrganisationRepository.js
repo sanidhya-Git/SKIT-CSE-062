@@ -132,6 +132,49 @@ class OrganisationRepository {
     );
     return result.rows[0] || null;
   }
+
+  async createInvite({ orgId, email, role, token, invitedBy }) {
+    const result = await query(
+      `INSERT INTO org_invites (org_id, email, role, token, invited_by)
+       VALUES ($1, $2, $3, $4, $5)
+       ON CONFLICT (token) DO UPDATE SET expires_at = NOW() + INTERVAL '7 days'
+       RETURNING id, org_id, email, role, token, expires_at, created_at`,
+      [orgId, email, role, token, invitedBy]
+    );
+    return result.rows[0];
+  }
+
+  async findInviteByToken(token) {
+    const result = await query(
+      `SELECT i.*, o.name AS org_name, u.name AS inviter_name, u.email AS inviter_email
+       FROM org_invites i
+       JOIN organisations o ON o.id = i.org_id
+       JOIN users u ON u.id = i.invited_by
+       WHERE i.token = $1 AND i.accepted_at IS NULL AND i.expires_at > NOW()`,
+      [token]
+    );
+    return result.rows[0] || null;
+  }
+
+  async markInviteAccepted(token) {
+    const result = await query(
+      `UPDATE org_invites SET accepted_at = NOW()
+       WHERE token = $1
+       RETURNING id, org_id, email, role`,
+      [token]
+    );
+    return result.rows[0] || null;
+  }
+
+  async findPendingInviteByEmail(orgId, email) {
+    const result = await query(
+      `SELECT id, email, role, token, expires_at
+       FROM org_invites
+       WHERE org_id = $1 AND email = $2 AND accepted_at IS NULL AND expires_at > NOW()`,
+      [orgId, email]
+    );
+    return result.rows[0] || null;
+  }
 }
 
 module.exports = new OrganisationRepository();
