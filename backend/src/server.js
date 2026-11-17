@@ -113,6 +113,11 @@ app.use((req, res, next) => {
 // Global rate limiter
 app.use(globalLimiter);
 
+// Root — quick API info
+app.get('/', (req, res) => {
+  res.json({ name: 'OneOps API', version: '1.0.0', status: 'ok', docs: '/health' });
+});
+
 // Health endpoints (no auth, no rate limit beyond global)
 app.use('/health', healthRouter);
 
