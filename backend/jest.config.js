@@ -5,7 +5,7 @@ module.exports = {
   testMatch: ['**/__tests__/**/*.test.js'],
   coverageDirectory: 'coverage',
   collectCoverageFrom: ['src/**/*.js', '!src/__tests__/**'],
-  setupFilesAfterFramework: [],
+  setupFilesAfterEnv: [],
   testTimeout: 30000,
   verbose: true,
   forceExit: true,

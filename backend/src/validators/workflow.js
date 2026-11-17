@@ -31,7 +31,7 @@ const createWorkflowSchema = z.object({
   name: z.string().min(1).max(255).trim(),
   description: z.string().max(2000).optional(),
   trigger: triggerSchema,
-  steps: z.array(stepSchema).optional().default([]),
+  steps: z.array(stepSchema).min(1).optional(),
   variables: z.record(z.unknown()).optional().default({}),
 });
 

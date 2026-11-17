@@ -84,7 +84,20 @@ jest.mock('../db/pool', () => {
 
       return { rows: [], rowCount: 0 };
     }),
-    getPool: jest.fn(() => ({ query: jest.fn(async () => ({ rows: [{ 1: 1 }] })) })),
+    getPool: jest.fn(() => ({
+      connect: jest.fn(async () => {
+        const clientQuery = jest.fn(async (sql) => {
+          const s = sql.trim().toUpperCase();
+          if (s === 'BEGIN' || s === 'COMMIT' || s === 'ROLLBACK') return { rows: [], rowCount: 0 };
+          if (s.startsWith('INSERT INTO ORGANISATIONS')) {
+            return { rows: [{ id: 'org-1', name: 'Test Org', slug: 'test-org', owner_id: 'u1', settings: {}, plan: 'free', created_at: new Date(), updated_at: new Date() }], rowCount: 1 };
+          }
+          if (s.startsWith('INSERT INTO ORG_MEMBERS')) return { rows: [], rowCount: 1 };
+          return { rows: [], rowCount: 0 };
+        });
+        return { query: clientQuery, release: jest.fn() };
+      }),
+    })),
     closePool: jest.fn(),
   };
 });
@@ -101,6 +114,7 @@ describe('Auth API', () => {
     name: 'Test User',
     email: `test_${Date.now()}@example.com`,
     password: 'SecurePass1',
+    organisationName: 'Test Org',
   };
 
   let accessToken;

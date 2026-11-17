@@ -322,16 +322,18 @@ def generate_pdf(interval="weekly"):
                 ('BOTTOMPADDING', (0, 0), (-1, -1), 2.5),
                 ('TOPPADDING', (0, 0), (-1, -1), 2.5),
                 ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#CBD5E1")),
-                ('ROWBACKGROUNDS', (0, 1), (2, -1), [colors.white, colors.HexColor("#F8FAFC")]),
-                ('SPAN', (3, 1), (3, num_rows - 1)),              # Vertically merge mentor marks column
-                ('VALIGN', (3, 1), (3, num_rows - 1), 'MIDDLE'),     # Vertically center the marks line
-                ('BACKGROUND', (3, 1), (3, num_rows - 1), colors.HexColor("#FEF3C7")), # Accent for marks area
+                ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor("#F8FAFC")]),
+                ('BACKGROUND', (3, 1), (3, 1), colors.HexColor("#FEF3C7")),
             ]
 
             log_table.setStyle(TableStyle(t_style))
             student_section.append(log_table)
             student_section.append(Spacer(1, 5))
-            story.append(KeepTogether(student_section))
+            if len(logs) <= 15:
+                story.append(KeepTogether(student_section))
+            else:
+                for item in student_section:
+                    story.append(item)
 
     # 6. Symmetrical Signatures
     story.append(Spacer(1, 16))

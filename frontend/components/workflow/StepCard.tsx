@@ -165,9 +165,9 @@ export function StepCard({
                 />
                 <Input
                   label="Approver role (minimum)"
-                  value={(step.config.requiredRole as string) ?? 'manager'}
+                  value={(step.config.requiredRole as string) ?? 'approver'}
                   onChange={e => updateConfig('requiredRole', e.target.value)}
-                  placeholder="manager"
+                  placeholder="approver"
                 />
               </div>
             )}

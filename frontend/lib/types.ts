@@ -10,12 +10,11 @@ export interface User {
 }
 
 export type UserRole =
-  | 'super_admin'
-  | 'org_owner'
-  | 'org_admin'
-  | 'workflow_builder'
-  | 'manager'
-  | 'employee'
+  | 'owner'
+  | 'admin'
+  | 'builder'
+  | 'approver'
+  | 'operator'
   | 'auditor';
 
 export interface AuthResponse {

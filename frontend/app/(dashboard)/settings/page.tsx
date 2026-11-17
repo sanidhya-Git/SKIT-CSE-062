@@ -19,10 +19,10 @@ import { getErrorMessage, getInitials } from '@/lib/utils';
 import { roleLabel as rl } from '@/lib/auth';
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
-  { value: 'org_admin', label: 'Admin' },
-  { value: 'workflow_builder', label: 'Builder' },
-  { value: 'manager', label: 'Manager' },
-  { value: 'employee', label: 'Employee' },
+  { value: 'admin', label: 'Admin' },
+  { value: 'builder', label: 'Builder' },
+  { value: 'approver', label: 'Approver' },
+  { value: 'operator', label: 'Operator' },
   { value: 'auditor', label: 'Auditor' },
 ];
 
@@ -36,7 +36,7 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<UserRole>('employee');
+  const [inviteRole, setInviteRole] = useState<UserRole>('operator');
   const [inviteLoading, setInviteLoading] = useState(false);
   const [removeTarget, setRemoveTarget] = useState<OrgMember | null>(null);
   const [removeLoading, setRemoveLoading] = useState(false);
@@ -73,7 +73,7 @@ export default function SettingsPage() {
       showToast('success', 'Invitation sent', `${inviteEmail} has been invited as ${rl(inviteRole)}.`);
       setInviteOpen(false);
       setInviteEmail('');
-      setInviteRole('employee');
+      setInviteRole('operator');
       loadMembers();
     } catch (err) {
       showToast('error', 'Could not invite member', getErrorMessage(err));
@@ -192,7 +192,7 @@ export default function SettingsPage() {
                   <div className="member-email">{member.user.email}</div>
                 </div>
                 <div className="member-actions">
-                  {member.userId !== user?.id && member.role !== 'org_owner' ? (
+                  {member.userId !== user?.id && member.role !== 'owner' ? (
                     <>
                       <select
                         className="form-select"
@@ -238,7 +238,7 @@ export default function SettingsPage() {
       {/* Invite modal */}
       <Modal
         open={inviteOpen}
-        onClose={() => { setInviteOpen(false); setInviteEmail(''); setInviteRole('employee'); }}
+        onClose={() => { setInviteOpen(false); setInviteEmail(''); setInviteRole('operator'); }}
         title="Invite a team member"
         footer={
           <>

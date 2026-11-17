@@ -37,12 +37,11 @@ export function getUserIdFromToken(token: string): string | null {
 
 // ─── Role hierarchy ───────────────────────────────────────────────────────
 const ROLE_RANK: Record<UserRole, number> = {
-  super_admin: 100,
-  org_owner: 80,
-  org_admin: 70,
-  workflow_builder: 50,
-  manager: 40,
-  employee: 20,
+  owner: 100,
+  admin: 80,
+  builder: 60,
+  approver: 40,
+  operator: 20,
   auditor: 10,
 };
 
@@ -57,21 +56,21 @@ export function hasRole(userRole: UserRole, minimumRole: UserRole): boolean {
  * Returns true if the user can manage workflows (create, edit, publish).
  */
 export function canManageWorkflows(role: UserRole): boolean {
-  return hasRole(role, 'workflow_builder');
+  return hasRole(role, 'builder');
 }
 
 /**
  * Returns true if the user can approve workflow steps.
  */
 export function canApprove(role: UserRole): boolean {
-  return hasRole(role, 'manager');
+  return hasRole(role, 'approver');
 }
 
 /**
  * Returns true if the user can manage organisation settings and members.
  */
 export function canManageOrg(role: UserRole): boolean {
-  return hasRole(role, 'org_admin');
+  return hasRole(role, 'admin');
 }
 
 /**
@@ -86,12 +85,11 @@ export function canViewAudit(role: UserRole): boolean {
  */
 export function roleLabel(role: UserRole): string {
   const labels: Record<UserRole, string> = {
-    super_admin: 'Super Admin',
-    org_owner: 'Owner',
-    org_admin: 'Admin',
-    workflow_builder: 'Builder',
-    manager: 'Manager',
-    employee: 'Employee',
+    owner: 'Owner',
+    admin: 'Admin',
+    builder: 'Builder',
+    approver: 'Approver',
+    operator: 'Operator',
     auditor: 'Auditor',
   };
   return labels[role] ?? role;

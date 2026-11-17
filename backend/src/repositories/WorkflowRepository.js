@@ -48,7 +48,7 @@ class WorkflowRepository {
         name,
         description || null,
         JSON.stringify(trigger),
-        JSON.stringify(steps),
+        JSON.stringify(steps ?? []),
         JSON.stringify(variables || {}),
         createdBy,
       ]
