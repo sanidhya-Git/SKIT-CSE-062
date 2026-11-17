@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-OneOps - Form-3 Weekly Progress Report Generator
-Usage: python generate_report.py weekly
-"""
+
 
 import sys
 import subprocess
